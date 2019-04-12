@@ -1,74 +1,67 @@
 f = open("input3.txt")
-
 def input():
     return f.readline()
+# LOCAL
+#------------------------------------------------------------------------------------------------
 
 import string
 
-def factorize(primes_multiple, all_primes):
-    for p in all_primes:
-        if primes_multiple % p == 0:
-            return p, primes_multiple // p
+def gcd(a, b):
+    a, b = (a, b) if a > b else (b, a)
+    while a != b:
+        a = a - b
+        a, b = (a, b) if a > b else (b, a)
 
-    assert(False, "Could not find primes")
-
-def primes(N):
-    is_prime = [True] * (N + 1)
-    
-    is_prime[0] = is_prime[1]  = False
-
-    for i in range(2, N + 1):
-        j = 2 * i
-        while j <= N:
-            is_prime[j] = False
-            j += i
-            
-    return {i for i, x in enumerate(is_prime) if x}
+    return a
 
 T = int(input())
 for i in range(T):
     N, MESSAGE_LEN = [int(x) for x in input().strip().split(" ")]
     encoded_message = [int(x) for x in input().strip().split(" ")]
     
-    all_primes = primes(N)
-  
-
     used_primes = set()
-    pos_to_encoded = [0] * MESSAGE_LEN
+    pos_to_encoded = [0] * (MESSAGE_LEN + 1)
 
+    # primes_multiple, next_primes_multiple = p1 * p2, p2 * p3 ; next step: p1 * p2 == prev_p2 * prev_p3 = => p1 == prev_p2
     for j, (primes_multiple, next_primes_multiple) in enumerate(zip(encoded_message[:-1], encoded_message[1:])):
-        p1, p2 = factorize(primes_multiple, all_primes)
-        p3, p4 = factorize(next_primes_multiple, all_primes)
-        
-        if p1 != p3 and p1 != p4:
-            pos_to_encoded[j] = p1
+        if (primes_multiple == next_primes_multiple):
+            if j != 0:
+                prev_prime = pos_to_encoded[j - 1]
+                this_prime = primes_multiple // prev_prime
+            else:
+                # _first_ 4 symbols in decoded seq are repeated pairs XYXY... => e.g primes12 = {3*5, 3*5}
+                k = j
+                while encoded_message[k] == encoded_message[k + 1]:
+                    k += 1
+
+                last_prime_in_pair_sequence = gcd(encoded_message[k], encoded_message[k + 1]) # => p2 is last of the letters in repeating seq.
+                second_last_prime_in_pair_sequence = primes_multiple // last_prime_in_pair_sequence                    # => p1 is the other letter. Whic is first?
+
+                # even number of code numbers => odd numbers of decoded letters => p2 is p1
+                if (k - j + 1) % 2 == 0:
+                    this_prime, next_prime = last_prime_in_pair_sequence, second_last_prime_in_pair_sequence 
+                else:
+                    this_prime, next_prime = second_last_prime_in_pair_sequence, last_prime_in_pair_sequence
+
         else:
-            pos_to_encoded[j] = p2
-
-        if p4 == p1 or p4 == p2:
-            p3, p4 = p4, p3
-
+            next_prime = gcd(primes_multiple, next_primes_multiple)
+            this_prime = primes_multiple // next_prime 
         
-        used_primes.add(p1)
-        used_primes.add(p2)
-        used_primes.add(p3)
-        used_primes.add(p4)
-        
+        pos_to_encoded[j] = this_prime           
 
-    used_primes_list = list(used_primes)
+    last_prime = encoded_message[-1] // next_prime
+    pos_to_encoded[MESSAGE_LEN] = last_prime
+        
+    used_primes_list = list(set(pos_to_encoded))
     used_primes_list.sort()
     
     primes_to_decoded_letter_map = {used_primes_list[i]:l for i, l in enumerate(string.ascii_uppercase)}
     
-    assert(len(used_primes_list) == 26)
+    assert len(used_primes_list) == 26
 
     #decode:
     res = []
-    for j in range(MESSAGE_LEN - 1):
-        res.append(primes_to_decoded_letter_map[pos_to_encoded[j]])
-
-    res.append(primes_to_decoded_letter_map[p3])
-    res.append(primes_to_decoded_letter_map[p4])
-
+    for encoded_letter_prime in pos_to_encoded:
+        res.append(primes_to_decoded_letter_map[encoded_letter_prime])
         
     print("Case #{}: {}".format(i + 1, "".join(res)))

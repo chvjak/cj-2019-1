@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>7f98d512-7cc7-4852-9834-402369536eb1</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>cj_2019_3.py</StartupFile>
+    <StartupFile>tests.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -31,6 +31,9 @@
     <Compile Include="cj_2019_1.py" />
     <Compile Include="interactive_runner.py" />
     <Compile Include="testing_tool.py" />
+    <Compile Include="tests.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="input1.txt" />
